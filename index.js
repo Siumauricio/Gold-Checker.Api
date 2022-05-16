@@ -27,12 +27,13 @@ const getLast5Years = (initDate = new Date()) => {
 
 // 2019-05-16 -> YYYY-MM-DD
 const fetchGold = async (initDate = new Date()) => {
+   const API_URL = 'http://api.nbp.pl/api/cenyzlota/';
    const goldListPromises = [];
    const years = getLast5Years(initDate);
    for (let i = 0; i < years.length - 1; i++) {
       const currentYear = years[i];
       const previousYear = years[i + 1];
-      const request = axios.get(`http://api.nbp.pl/api/cenyzlota/${currentYear}/${previousYear}`);
+      const request = axios.get(API_URL + `${currentYear}/${previousYear}`);
       goldListPromises.push(request);
    }
    const data = [];
@@ -80,8 +81,11 @@ const getRateGold = async (initDate = new Date()) => {
    const date = new Date();
    const rs = await getRateGold(date);
    if (typeof rs === 'object') {
-      console.log(`Highest rate: ${rs.highest.cena} $ on ${rs.highest.data}`);
-      console.log(`Lowest rate: ${rs.lowest.cena} $ on ${rs.lowest.data}`);
+      const invest = 135000;
+      console.log(`This was the best time to sell gold -> Highest rate: ${rs.highest.cena} $ on ${rs.highest.data}`);
+      console.log(`This was the best time to buy gold -> Lowest rate: ${rs.lowest.cena} $ on ${rs.lowest.data}`);
+      console.log(`Investment: ${invest} $`);
+      // console.log(`Profit: ${((rs.highest.cena - invest) * 100) / invest} %`);
    } else {
       console.log(rs);
    }
