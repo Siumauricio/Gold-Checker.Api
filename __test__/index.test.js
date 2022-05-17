@@ -1,31 +1,11 @@
-const formatDate = require('../index').formatDate;
 const getLast5Years = require('../index').getLast5Years;
 const fetchGold = require('../index').fetchGold;
 const getRateGold = require('../index').getRateGold;
 
 describe('Calculator tests', () => {
-   test('Should return the current date and transform to YYYY-MM-DD ', () => {
-      let res = formatDate();
-      expect(res).toBe('2022-05-16');
-   });
-   test('Should return the date transform to YYYY-MM-DD using a custom Date', () => {
-      // Month have a range between 0-11
-      let previousDate = new Date(2015, 1, 1);
-      let res = formatDate(previousDate);
-      expect(res).toBe('2015-02-01');
-
-      previousDate = new Date(2020, 5, 25);
-      res = formatDate(previousDate);
-      expect(res).toBe('2020-06-25');
-
-      previousDate = new Date(2022, 11, 22);
-      res = formatDate(previousDate);
-      expect(res).toBe('2022-12-22');
-   });
-
    test('Get the last 5 years from (DATE) ', () => {
-      const expectedOuput = ['2010-12-22', '2011-12-22', '2012-12-22', '2013-12-22', '2014-12-22', '2015-12-22'];
-      let date = new Date(2015, 11, 22); //Means the initial date
+      const expectedOuput = ['2017-02-12', '2018-02-12', '2019-02-12', '2020-02-12', '2021-02-12', '2022-02-12'];
+      let date = '2022-02-12'; //Means the initial date
       let res = getLast5Years(date);
       expect(res).toStrictEqual(expectedOuput);
    });
