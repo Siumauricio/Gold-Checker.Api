@@ -5,7 +5,11 @@
 ### To run set the following commands in the /Golden-Checker directory 
 
 ```
-DATE = 2022-05-12
+Build
 docker build -t gold-rate .
-docker run  gold-rate DATE
+
+Format YYYY-MM-DD
+DATE = 2022-05-12
+docker run  gold-rate 2022-05-12
+docker run  gold-rate 2020-01-11
 ```
