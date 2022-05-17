@@ -1,34 +1,17 @@
 const axios = require('axios').default;
+const moment = require('moment');
+const API_URL = 'http://api.nbp.pl/api/cenyzlota/';
+const _ = require('lodash');
 
-const formatDate = (date = new Date()) => {
-   let d = new Date(date);
-   let month = (d.getMonth() + 1).toString(); // + 1 because getMonth() returns month from 0 to 11
-   let day = d.getDate().toString();
-   let year = d.getFullYear();
-   if (month.length < 2) {
-      month = '0' + month;
-   }
-   if (day.length < 2) {
-      day = '0' + day;
-   }
-   return [year, month, day].join('-');
-};
 const getLast5Years = (initDate = new Date()) => {
-   let date = formatDate(initDate);
-   const last5Years = [date];
-
-   for (let i = 0; i < 5; i++) {
-      let previousDate = initDate.setFullYear(initDate.getFullYear() - 1);
-      date = formatDate(previousDate);
-      last5Years.push(date);
-   }
-   return last5Years.reverse();
+   return Array.from({length: 6}, (_, k) => {
+      const formatDate = moment(initDate, 'YYYY-MM-DD').subtract(k, 'years').format('YYYY-MM-DD');
+      return formatDate;
+   }).reverse();
 };
-
-// 2019-05-16 -> YYYY-MM-DD
 const fetchGold = async (initDate = new Date()) => {
-   const API_URL = 'http://api.nbp.pl/api/cenyzlota/';
    const goldListPromises = [];
+   const data = [];
    const years = getLast5Years(initDate);
    for (let i = 0; i < years.length - 1; i++) {
       const currentYear = years[i];
@@ -36,7 +19,6 @@ const fetchGold = async (initDate = new Date()) => {
       const request = axios.get(API_URL + `${currentYear}/${previousYear}`);
       goldListPromises.push(request);
    }
-   const data = [];
    try {
       const promisesGoldList = await Promise.all(goldListPromises);
       for (let i = 0; i < promisesGoldList.length; i++) {
@@ -46,54 +28,42 @@ const fetchGold = async (initDate = new Date()) => {
    } catch (error) {
       return 'Sorry there is no data available for the range date please set another range';
    }
-   return data;
+   return data.flat();
 };
+const isValid = (d) => moment(d, 'YYYY-MM-DD', true).format('YYYY-MM-DD') === d;
 
 const getRateGold = async (initDate = new Date()) => {
    const goldData = await fetchGold(initDate);
-   let rate = {
-      lowest: {
-         cena: Number.MAX_VALUE,
-         data: '',
-      },
-      highest: {
-         cena: 0,
-         data: '',
-      },
-   };
-   for (let i = 0; i < goldData.length; i++) {
-      const currentYear = await goldData[i];
-      Object.keys(currentYear).forEach((key) => {
-         if (currentYear[key].cena > rate.highest['cena']) {
-            rate.highest['cena'] = currentYear[key].cena;
-            rate.highest['data'] = currentYear[key].data;
-         }
-         if (currentYear[key].cena < rate.lowest['cena']) {
-            rate.lowest['cena'] = currentYear[key].cena;
-            rate.lowest['data'] = currentYear[key].data;
-         }
-      });
+   if (typeof goldData !== 'string') {
+      const maxRate = _.maxBy(goldData, 'cena');
+      const minRate = _.minBy(goldData, 'cena');
+      return {
+         highest: maxRate,
+         lowest: minRate,
+      };
    }
-   return typeof goldData === 'string' ? goldData : rate;
+   return goldData;
 };
-
 (async () => {
-   const date = new Date();
-   const rs = await getRateGold(date);
-   if (typeof rs === 'object') {
-      const invest = 135000;
-      console.log(`This was the best time to sell gold -> Highest rate: ${rs.highest.cena} $ on ${rs.highest.data}`);
-      console.log(`This was the best time to buy gold -> Lowest rate: ${rs.lowest.cena} $ on ${rs.lowest.data}`);
-      console.log(`Investment: ${invest} $`);
-      // console.log(`Profit: ${((rs.highest.cena - invest) * 100) / invest} %`);
-   } else {
-      console.log(rs);
+   const args = process.argv.slice(2);
+   if (args.length === 0 || !isValid(args[0])) {
+      console.log('Please set a date in format YYYY-MM-DD Like 2022-02-12');
+   } else if (isValid(args[0])) {
+      const rs = await getRateGold(args[0]);
+      if (typeof rs === 'object') {
+         const invest = 135000;
+         console.log(`This was the best time to sell gold -> Highest rate: ${rs.highest.cena} $ on ${rs.highest.data}`);
+         console.log(`This was the best time to buy gold -> Lowest rate: ${rs.lowest.cena} $ on ${rs.lowest.data}`);
+         console.log(`Investment: ${invest} $`);
+      } else {
+         console.log(rs);
+      }
    }
 })();
 
 module.exports = {
    fetchGold,
    getRateGold,
-   formatDate,
+   isValid,
    getLast5Years,
 };
