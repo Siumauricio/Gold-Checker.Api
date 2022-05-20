@@ -22,14 +22,14 @@ const fetchGold = async (initDate = new Date()) => {
    try {
       const promisesGoldList = await Promise.all(goldListPromises);
       for (let i = 0; i < promisesGoldList.length; i++) {
-         const yearData = await promisesGoldList[i].data;
-         data.push(yearData);
+         data.push(promisesGoldList[i].data);
       }
    } catch (error) {
       return 'Sorry there is no data available for the range date please set another range';
    }
    return data.flat();
 };
+
 const isValid = (d) => moment(d, 'YYYY-MM-DD', true).format('YYYY-MM-DD') === d;
 
 const getRateGold = async (initDate = new Date()) => {
@@ -44,6 +44,7 @@ const getRateGold = async (initDate = new Date()) => {
    }
    return goldData;
 };
+
 (async () => {
    const args = process.argv.slice(2);
    if (args.length === 0 || !isValid(args[0])) {
